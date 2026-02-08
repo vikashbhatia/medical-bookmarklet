@@ -58,7 +58,7 @@
                 background: 'rgba(0,0,0,0.95)', color: 'white', padding: '12px',
                 borderRadius: '8px', zIndex: '99999', fontSize: '13px', borderLeft: '4px solid #00E676', maxHeight: '40vh', overflowY: 'auto'
             });
-            box.innerHTML = '<b style="color:#00E676 text-transform:uppercase">The Bhatia Protocol</b><div id="diag-list" style="margin-top:8px;"></div>';
+            box.innerHTML = '<b style="color:#00E676 text-transform:uppercase">Diagnosis by Vikash Bhatia :</b><div id="diag-list" style="margin-top:8px;"></div>';
             document.body.appendChild(box);
         }
 
