@@ -11,7 +11,7 @@
 
     // 3. SHADOW DOM TOAST SYSTEM
     const showToast = (msg, isSync = false) => {
-        if (!isTargetPage()) return; // Don't show toast if we navigated away
+        if (!isTargetPage()) return; 
         const id = isSync ? 'vb-sync-host' : 'vb-status-host';
         let host = document.getElementById(id);
         if (!host) {
@@ -44,29 +44,24 @@
         }
     };
 
-    // 4. THE WATCHDOG: Monitors URL changes in real-time
+    // 4. THE WATCHDOG: Monitors URL changes
     let lastUrl = location.href;
     const observer = new MutationObserver(() => {
         if (location.href !== lastUrl) {
             lastUrl = location.href;
-            if (!isTargetPage()) {
-                console.log("VB: Navigation detected. Purging UI.");
-                purgeUI();
-            }
+            if (!isTargetPage()) purgeUI();
         }
     });
     observer.observe(document, {subtree: true, childList: true});
 
-    // 5. INITIAL EXECUTION
     if (!isTargetPage()) {
         purgeUI();
-        return; // HALT IMMEDIATELY if not on the target page
+        return;
     }
 
-    purgeUI(); // Clear old ghosts
+    purgeUI();
     showToast("Autopilot Online");
 
-    // Helper for React inputs
     const setVal = (el, val) => {
         if(!el) return;
         const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')?.set || 
@@ -76,7 +71,9 @@
         el.dispatchEvent(new Event('change', { bubbles: true }));
     };
 
-    /* --- AUTO-NAME LOGIC --- */
+    /* --- AUTO-NAME LOGIC (FIXED FORMATTING & DE-DUPLICATION) --- */
+    const toProperCase = (s) => s ? s.toLowerCase().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ').trim() : '';
+
     const mN = document.getElementById('mobileNbr'), fn = document.getElementById('fullName');
     if (mN && fn && mN.value.length >= 10) {
         const phone = mN.value.replace(/\D/g, '').slice(-10);
@@ -86,7 +83,10 @@
                 let c = document.createElement('div');
                 c.id = 'nb-cont'; c.style.cssText = 'display:flex;flex-wrap:wrap;gap:6px;padding:8px 0;width:100%;';
                 fn.parentNode.insertBefore(c, fn.nextSibling);
-                let names = [...new Set(r.results.records.flatMap(rec => [rec.name, rec.fname]).filter(x => x))];
+                
+                // Format names and filter for unique results only
+                let names = [...new Set(r.results.records.flatMap(rec => [toProperCase(rec.name), toProperCase(rec.fname)]).filter(x => x && x.length > 1))];
+                
                 names.forEach(x => {
                     const b = document.createElement('div'); b.innerText = x;
                     b.style.cssText = 'background:#0087ff;color:white;padding:4px 10px;border-radius:15px;font-size:11px;cursor:pointer;font-weight:bold;font-family:sans-serif;';
