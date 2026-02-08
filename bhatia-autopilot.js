@@ -1,12 +1,23 @@
 (async function() {
-    /* 1. SHADOW DOM TOAST SYSTEM */
+    const TARGET_URL = 'crm.gudmed.in/amazoneRxDetails/patDetails';
+    
+    // 1. THE CLEANER: Kills all Bhatia UI elements instantly
+    const purgeUI = () => {
+        document.querySelectorAll('.vb-ui-element, #diag-float-box, #vb-sync-host, #vb-status-host, #nb-cont, [id^="vb-"]').forEach(el => el.remove());
+    };
+
+    // 2. THE CHECKER: Returns true only if we are on the specific patient page
+    const isTargetPage = () => window.location.href.includes(TARGET_URL);
+
+    // 3. SHADOW DOM TOAST SYSTEM
     const showToast = (msg, isSync = false) => {
+        if (!isTargetPage()) return; // Don't show toast if we navigated away
         const id = isSync ? 'vb-sync-host' : 'vb-status-host';
         let host = document.getElementById(id);
         if (!host) {
             host = document.createElement('div');
             host.id = id;
-            host.className = 'vb-ui-element'; // For easy cleanup
+            host.className = 'vb-ui-element';
             document.body.appendChild(host);
         }
         const shadow = host.shadowRoot || host.attachShadow({mode: 'open'});
@@ -17,50 +28,45 @@
             .toast {
                 position: fixed; top: ${isSync ? '70px' : '20px'}; right: 20px;
                 background: ${bgColor}; color: #000; padding: 8px 14px;
-                border-radius: 8px; font-family: sans-serif;
-                font-size: 13px; font-weight: 800; z-index: 2147483647;
-                box-shadow: 0 4px 15px rgba(0,0,0,0.4); display: flex; align-items: center; gap: 8px;
-                transform: translateX(150%); transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+                border-radius: 8px; font-family: sans-serif; font-size: 12px; font-weight: 800;
+                z-index: 2147483647; box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+                display: flex; align-items: center; gap: 8px;
+                transform: translateX(150%); transition: transform 0.4s ease-out;
             }
             .visible { transform: translateX(0); }
         </style>
-        <div class="toast" id="t">
-            <span>${isSync ? '🌀' : '🚀'}</span>
-            <span>${msg.toUpperCase()}</span>
-        </div>`;
+        <div class="toast" id="t"><span>${isSync ? '🌀' : '🚀'}</span><span>${msg.toUpperCase()}</span></div>`;
 
         const t = shadow.getElementById('t');
         setTimeout(() => t && t.classList.add('visible'), 50);
         if (!isSync) {
-            setTimeout(() => { 
-                if(t) t.classList.remove('visible'); 
-                setTimeout(() => host.remove(), 500); 
-            }, 2500);
+            setTimeout(() => { if(t) t.classList.remove('visible'); setTimeout(() => host.remove(), 500); }, 2500);
         }
     };
 
-    /* 2. IMMEDIATE CLEANUP ON URL CHANGE */
+    // 4. THE WATCHDOG: Monitors URL changes in real-time
     let lastUrl = location.href;
-    const cleanup = () => {
-        // Remove all Bhatia UI elements
-        document.querySelectorAll('.vb-ui-element, #diag-float-box, #vb-sync-host, #vb-status-host, #nb-cont').forEach(el => el.remove());
-    };
-
-    const urlObserver = new MutationObserver(() => {
+    const observer = new MutationObserver(() => {
         if (location.href !== lastUrl) {
             lastUrl = location.href;
-            cleanup();
-            console.log("VB: URL Changed, UI Purged.");
+            if (!isTargetPage()) {
+                console.log("VB: Navigation detected. Purging UI.");
+                purgeUI();
+            }
         }
     });
-    urlObserver.observe(document, {subtree: true, childList: true});
+    observer.observe(document, {subtree: true, childList: true});
 
-    /* 3. CORE UTILS */
-    const unlock = () => { window.onbeforeunload = null; if (window.jQuery) jQuery(window).off('beforeunload'); };
-    unlock(); setInterval(unlock, 1000);
-    const isRx = () => window.location.href.includes('patDetails');
-    const normalize = (s) => s.toLowerCase().replace(/[^a-z0-9]/g, '').trim();
-    
+    // 5. INITIAL EXECUTION
+    if (!isTargetPage()) {
+        purgeUI();
+        return; // HALT IMMEDIATELY if not on the target page
+    }
+
+    purgeUI(); // Clear old ghosts
+    showToast("Autopilot Online");
+
+    // Helper for React inputs
     const setVal = (el, val) => {
         if(!el) return;
         const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')?.set || 
@@ -70,10 +76,7 @@
         el.dispatchEvent(new Event('change', { bubbles: true }));
     };
 
-    cleanup(); // Clear any ghost UI from previous run
-    showToast("Autopilot Online");
-
-    /* 4. IDENTITY LOOKUP */
+    /* --- AUTO-NAME LOGIC --- */
     const mN = document.getElementById('mobileNbr'), fn = document.getElementById('fullName');
     if (mN && fn && mN.value.length >= 10) {
         const phone = mN.value.replace(/\D/g, '').slice(-10);
@@ -94,61 +97,55 @@
         } catch (e) {}
     }
 
-    /* 5. DIAGNOSIS SYSTEM */
-    if (isRx()) {
-        const box = document.createElement('div'); box.id = 'diag-float-box';
-        Object.assign(box.style, { 
-            position: 'fixed', bottom: '20px', left: '20px', width: '240px', 
-            background: '#111', color: '#fff', padding: '12px', borderRadius: '12px', 
-            zIndex: '2147483646', fontSize: '12px', border: '1px solid #333', 
-            boxShadow: '0 10px 30px rgba(0,0,0,0.5)', fontFamily: 'sans-serif'
-        });
-        box.innerHTML = `<b style="color:#00E676">Diagnosis by Vikash Bhatia</b><div id="diag-list" style="margin-top:8px;"></div>`;
-        document.body.appendChild(box);
+    /* --- AUTO-DIAGNOSIS LOGIC --- */
+    const box = document.createElement('div'); box.id = 'diag-float-box';
+    Object.assign(box.style, { 
+        position: 'fixed', bottom: '20px', left: '20px', width: '240px', 
+        background: '#111', color: '#fff', padding: '12px', borderRadius: '12px', 
+        zIndex: '2147483646', fontSize: '12px', border: '1px solid #333', 
+        boxShadow: '0 10px 30px rgba(0,0,0,0.5)', fontFamily: 'sans-serif'
+    });
+    box.innerHTML = `<b style="color:#00E676">Diagnosis by Vikash Bhatia</b><div id="diag-list" style="margin-top:8px;"></div>`;
+    document.body.appendChild(box);
 
-        const sBox = document.getElementById('symptoms/complaints') || document.querySelector('[name="symptoms/complaints"]');
-        const listUI = document.getElementById('diag-list');
-        const FB_BASE = 'https://medical-database-189bc-default-rtdb.asia-southeast1.firebasedatabase.app/medicines';
-        const AI_BASE = 'https://shy-grass-9a16.vikashthevivi.workers.dev/prompt?prompt=';
-        let selected = [];
+    const sBox = document.getElementById('symptoms/complaints') || document.querySelector('[name="symptoms/complaints"]');
+    const listUI = document.getElementById('diag-list');
+    const FB_BASE = 'https://medical-database-189bc-default-rtdb.asia-southeast1.firebasedatabase.app/medicines';
+    const AI_BASE = 'https://shy-grass-9a16.vikashthevivi.workers.dev/prompt?prompt=';
+    let selected = [];
 
-        const addUI = (txt) => {
-            const d = document.createElement('div'); d.innerText = '✚ ' + txt;
-            d.style.cssText = 'padding:6px;cursor:pointer;border-bottom:1px solid #222;';
-            d.onclick = () => {
-                if (!selected.includes(txt)) {
-                    selected.push(txt);
-                    setVal(sBox, selected.join(', '));
-                    d.style.color = '#00E676'; d.innerText = '✔ ' + txt;
-                }
-            };
-            listUI.appendChild(d);
+    const addUI = (txt) => {
+        const d = document.createElement('div'); d.innerText = '✚ ' + txt;
+        d.style.cssText = 'padding:6px;cursor:pointer;border-bottom:1px solid #222;';
+        d.onclick = () => {
+            if (!selected.includes(txt)) {
+                selected.push(txt);
+                setVal(sBox, selected.join(', '));
+                d.style.color = '#00E676'; d.innerText = '✔ ' + txt;
+            }
         };
+        listUI.appendChild(d);
+    };
 
-        try {
-            const dbRes = await fetch(`${FB_BASE}.json`).then(r => r.json()) || {};
-            const rows = Array.from(document.querySelectorAll('table tr')).slice(1);
-            let needsAI = rows.some(r => r.cells[3] && !dbRes[normalize(r.cells[3].innerText)]);
-            if (needsAI) showToast("Syncing Database...", true);
+    try {
+        const dbRes = await fetch(`${FB_BASE}.json`).then(r => r.json()) || {};
+        const rows = Array.from(document.querySelectorAll('table tr')).slice(1);
+        let needsAI = rows.some(r => r.cells[3] && !dbRes[r.cells[3].innerText.toLowerCase().replace(/[^a-z0-9]/g, '')]);
+        if (needsAI) showToast("Syncing Database...", true);
 
-            for (let r of rows) {
-                let m = r.cells[3]?.innerText?.trim() || ''; if (!m) continue;
-                let nrm = normalize(m);
-                if (dbRes[nrm]) { addUI(dbRes[nrm]); } else {
-                    const aiRes = await fetch(AI_BASE + encodeURIComponent('Medicine: ' + m + '. Reply with ONLY the diagnosis name.')).then(res => res.json());
-                    let clean = (aiRes.response || aiRes.reply || '').replace(/[#*{}":.!]/g, '').trim();
-                    if (clean && clean.length > 2) { addUI(clean); fetch(`${FB_BASE}/${nrm}.json`, { method: 'PUT', body: JSON.stringify(clean) }); }
-                }
+        for (let r of rows) {
+            let m = r.cells[3]?.innerText?.trim() || ''; if (!m) continue;
+            let nrm = m.toLowerCase().replace(/[^a-z0-9]/g, '');
+            if (dbRes[nrm]) { addUI(dbRes[nrm]); } else {
+                const aiRes = await fetch(AI_BASE + encodeURIComponent('Medicine: ' + m + '. Reply ONLY with diagnosis.')).then(res => res.json());
+                let clean = (aiRes.response || aiRes.reply || '').replace(/[#*{}":.!]/g, '').trim();
+                if (clean && clean.length > 2) { addUI(clean); fetch(`${FB_BASE}/${nrm}.json`, { method: 'PUT', body: JSON.stringify(clean) }); }
             }
-            const st = document.getElementById('vb-sync-host');
-            if (st && st.shadowRoot) { 
-                const inner = st.shadowRoot.getElementById('t');
-                if(inner) {
-                    inner.style.background = '#00E676';
-                    inner.querySelector('span:last-child').innerText = 'SYNC COMPLETE';
-                    setTimeout(() => st.remove(), 1500);
-                }
-            }
-        } catch (e) {}
-    }
+        }
+        const st = document.getElementById('vb-sync-host');
+        if (st && st.shadowRoot) {
+            const inner = st.shadowRoot.getElementById('t');
+            if(inner) { inner.style.background = '#00E676'; inner.querySelector('span:last-child').innerText = 'SYNC COMPLETE'; setTimeout(() => st.remove(), 1500); }
+        }
+    } catch (e) {}
 })();
