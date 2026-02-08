@@ -1,5 +1,5 @@
 (async function() {
-    /* 1. PREMIUM NOTIFICATION SYSTEM */
+    /* 1. FIXED NOTIFICATION SYSTEM */
     const showToast = (msg, isSync = false) => {
         const id = isSync ? 'vb-sync-toast' : 'vb-status-toast';
         let t = document.getElementById(id);
@@ -10,33 +10,49 @@
         }
         const bgColor = isSync ? 'rgba(0, 135, 255, 0.95)' : 'rgba(0, 230, 118, 0.95)';
         Object.assign(t.style, {
-            position: 'fixed', top: isSync ? '80px' : '20px', right: '20px', 
-            background: bgColor, color: '#000', padding: '12px 24px', borderRadius: '12px', zIndex: '100000',
-            fontWeight: 'bold', fontFamily: 'sans-serif', fontSize: '14px', boxShadow: '0 10px 25px rgba(0,0,0,0.3)', 
-            transform: 'translateX(150%)', transition: 'transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-            display: 'flex', alignItems: 'center', gap: '10px'
+            position: 'fixed', 
+            top: isSync ? '100px' : '40px', // Pushed down slightly for better visibility
+            right: '25px', 
+            background: bgColor, 
+            color: '#000', 
+            padding: '16px 28px', 
+            borderRadius: '12px', 
+            zIndex: '2147483647', // Maximum z-index
+            fontWeight: '900', 
+            fontFamily: 'system-ui, -apple-system, sans-serif', 
+            fontSize: '15px', 
+            boxShadow: '0 20px 40px rgba(0,0,0,0.4)', 
+            transform: 'translateX(180%)', // Start further off-screen
+            transition: 'transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '12px',
+            pointerEvents: 'none'
         });
         t.innerHTML = `<span>${isSync ? '🌀' : '🚀'}</span> <span>${msg}</span>`;
-        setTimeout(() => t.style.transform = 'translateX(0)', 100);
+        
+        // Use requestAnimationFrame for smoother entry
+        requestAnimationFrame(() => {
+            t.style.transform = 'translateX(0)';
+        });
+
         if (!isSync) {
             setTimeout(() => {
-                t.style.transform = 'translateX(150%)';
-                setTimeout(() => t.remove(), 500);
-            }, 3000);
+                t.style.transform = 'translateX(180%)';
+                setTimeout(() => t.remove(), 600);
+            }, 4000);
         }
     };
 
-    /* 2. BASE64 GIF SYSTEM (Bypasses CSP Blocks) */
+    /* 2. BASE64 GIF SYSTEM */
     const showFunnyMeme = () => {
         const m = document.createElement('div');
         m.id = 'vb-meme';
-        // Base64 Hacker Cat GIF
         const catGif = "data:image/gif;base64,R0lGODlhIAAgAPMAAP///wAAAMDAwAAAACH/C05FVFNDQVBFMi4wAwEAAAAh+QQJBAAAACwAAAAAIAAgAAAEPhDISau9OOvNu/9gKI5kaZ5oqq5s675wLM90bd94ru987//AoHBILBqPx6RySZyiaE6S0ul8Qp9QqnRKzWKzWggAIfkECQQAAAAsAAAAACAAIAAA BEEQyEmrvTjrzbv/YCiOZGmeYKqubOu+cCzPdG3feK7vfO//wKBwSCwaj8ekckmcomhOktLpfEKfUKp0Ss1is1oIADs=";
-        
         Object.assign(m.style, {
-            position: 'fixed', bottom: '20px', right: '20px', width: '120px', height: '120px',
-            zIndex: '100001', borderRadius: '15px', overflow: 'hidden',
-            boxShadow: '0 10px 30px rgba(0,0,0,0.5)', border: '2px solid #00E676',
+            position: 'fixed', bottom: '25px', right: '25px', width: '130px', height: '130px',
+            zIndex: '2147483647', borderRadius: '15px', overflow: 'hidden',
+            boxShadow: '0 10px 30px rgba(0,0,0,0.5)', border: '3px solid #00E676',
             background: `url(${catGif}) center/cover no-repeat #000`
         });
         document.body.appendChild(m);
@@ -85,8 +101,8 @@
         let box = document.getElementById('diag-float-box');
         if (!box) {
             box = document.createElement('div'); box.id = 'diag-float-box';
-            Object.assign(box.style, { position: 'fixed', bottom: '20px', left: '20px', width: '250px', background: 'rgba(0,0,0,0.95)', color: 'white', padding: '12px', borderRadius: '8px', zIndex: '99999', fontSize: '13px', borderLeft: '4px solid #00E676', maxHeight: '40vh', overflowY: 'auto' });
-            box.innerHTML = '<b style="color:#00E676">Diagnosis by Vikash Bhatia:</b><div id="diag-list" style="margin-top:8px;"></div>';
+            Object.assign(box.style, { position: 'fixed', bottom: '25px', left: '25px', width: '260px', background: 'rgba(0,0,0,0.96)', color: 'white', padding: '14px', borderRadius: '12px', zIndex: '2147483646', fontSize: '13px', borderLeft: '5px solid #00E676', boxShadow: '0 10px 30px rgba(0,0,0,0.5)', maxHeight: '45vh', overflowY: 'auto' });
+            box.innerHTML = '<b style="color:#00E676; font-size:14px;">Diagnosis by Vikash Bhatia:</b><div id="diag-list" style="margin-top:10px;"></div>';
             document.body.appendChild(box);
         }
 
@@ -105,7 +121,9 @@
 
         const addUI = (txt) => {
             const d = document.createElement('div');
-            d.innerText = '✚ ' + txt; d.style.cssText = 'padding:5px;cursor:pointer;border-bottom:1px solid #333;';
+            d.innerText = '✚ ' + txt; d.style.cssText = 'padding:6px;cursor:pointer;border-bottom:1px solid #333; transition: color 0.2s;';
+            d.onmouseover = () => { d.style.background = 'rgba(255,255,255,0.05)'; };
+            d.onmouseout = () => { d.style.background = 'transparent'; };
             d.onclick = () => { if (!selected.includes(txt)) { selected.push(txt); upd(); d.style.color = '#00E676'; d.innerText = '✔ ' + txt; } };
             listUI.appendChild(d);
         };
@@ -130,7 +148,7 @@
             }
             if (needsAI) {
                 const st = document.getElementById('vb-sync-toast');
-                if (st) { st.style.background = '#00E676'; st.innerHTML = '✅ SYNC COMPLETE'; setTimeout(() => { st.style.transform = 'translateX(150%)'; setTimeout(() => st.remove(), 500); }, 2000); }
+                if (st) { st.style.background = '#00E676'; st.innerHTML = '✅ SYNC COMPLETE'; setTimeout(() => { st.style.transform = 'translateX(180%)'; setTimeout(() => st.remove(), 600); }, 2500); }
                 if (memeImg) memeImg.remove();
             }
         } catch (e) {}
