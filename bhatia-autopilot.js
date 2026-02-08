@@ -1,5 +1,26 @@
 (async function() {
-    /* 1. SESSION UNLOCK */
+    /* 1. NOTIFICATION SYSTEM */
+    const showToast = (msg) => {
+        const t = document.createElement('div');
+        t.innerText = msg;
+        Object.assign(t.style, {
+            position: 'fixed', top: '20px', right: '20px', 
+            background: 'rgba(0, 230, 118, 0.95)', color: '#000',
+            padding: '12px 24px', borderRadius: '12px', zIndex: '100000',
+            fontWeight: 'bold', fontFamily: 'sans-serif', fontSize: '14px',
+            boxShadow: '0 10px 25px rgba(0,0,0,0.3)', transform: 'translateX(150%)',
+            transition: 'transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
+        });
+        document.body.appendChild(t);
+        setTimeout(() => t.style.transform = 'translateX(0)', 100);
+        setTimeout(() => {
+            t.style.transform = 'translateX(150%)';
+            setTimeout(() => t.remove(), 500);
+        }, 3000);
+    };
+    showToast("🚀 BHATIA AUTOPILOT: ONLINE");
+
+    /* 2. SESSION UNLOCK */
     const unlock = () => { 
         window.onbeforeunload = null; 
         if (window.jQuery) jQuery(window).off('beforeunload'); 
@@ -12,7 +33,7 @@
     const normalize = (s) => s.toLowerCase().replace(/[^a-z0-9]/g, '').trim();
     const toProper = (s) => s ? s.toLowerCase().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') : '';
 
-    /* 2. SMART IDENTITY LOOKUP */
+    /* 3. SMART IDENTITY LOOKUP */
     if (mN && fn && mN.value.length >= 10) {
         const phone = mN.value.replace(/\D/g, '').slice(-10);
         try {
@@ -47,7 +68,7 @@
         } catch (e) {}
     }
 
-    /* 3. CLINICAL INSIGHT LOGIC */
+    /* 4. CLINICAL INSIGHT LOGIC */
     if (isRx()) {
         let box = document.getElementById('diag-float-box');
         if (!box) {
@@ -58,7 +79,7 @@
                 background: 'rgba(0,0,0,0.95)', color: 'white', padding: '12px',
                 borderRadius: '8px', zIndex: '99999', fontSize: '13px', borderLeft: '4px solid #00E676', maxHeight: '40vh', overflowY: 'auto'
             });
-            box.innerHTML = '<b style="color:#00E676 text-transform:uppercase">Diagnosis by Vikash Bhatia :</b><div id="diag-list" style="margin-top:8px;"></div>';
+            box.innerHTML = '<b style="color:#00E676">Diagnoses by Vikash Bhatia :</b><div id="diag-list" style="margin-top:8px;"></div>';
             document.body.appendChild(box);
         }
 
@@ -115,7 +136,7 @@
         } catch (e) {}
     }
 
-    /* 4. AUTO-CLEANUP */
+    /* 5. AUTO-CLEANUP */
     let lastUrl = location.href;
     const obs = new MutationObserver(() => {
         if (location.href !== lastUrl) {
